@@ -135,7 +135,9 @@ class LINSlave(LIN):
     _uart = None
 
     def __init__(self, id, func):
-        if LINSlave._id_func_list.get(str(id)) is None:
+        if id < 2 or id > 62:
+            print("ID out of valid range, should be between 2 and 62...")
+        elif LINSlave._id_func_list.get(str(id)) is None and func is not None:
             LINSlave._id_func_list[str(id)] = func
 
             self.id = id
