@@ -71,7 +71,7 @@ class MainSlave():
         return [self.servo.status()]
 
     def func_slave_4(self):
-        self.servo.close(self)
+        self.servo.close()
         return [self.servo.status()]
 
     def func_slave_5(self):

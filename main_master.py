@@ -22,7 +22,6 @@ class MainMaster():
         self.servo_next_operation = self.SERVO_CLOSED
         self.poll = select.poll()
         self.poll.register(sys.stdin, select.POLLIN)
-        self.display_help()
 
     def ask_rfid(self):
         return self.lin.send_header(self.LIN_RFID)
@@ -31,9 +30,13 @@ class MainMaster():
         return self.lin.send_header(self.LIN_SERVO_STATUS)[0]
 
     def ask_open(self):
+        last_status = self.servo_status
         self.servo_status = self.ask_status()
 
-        if self.servo_status == self.SERVO_OPEN:
+        if self.servo_status == -1:
+            self.servo_status = last_status
+            return False
+        elif self.servo_status == self.SERVO_OPEN:
             print("Cage already dettached!")
             return True
 
@@ -47,9 +50,13 @@ class MainMaster():
             return True
 
     def ask_close(self):
+        last_status = self.servo_status
         self.servo_status = self.ask_status()
 
-        if self.servo_status == self.SERVO_CLOSED:
+        if self.servo_status == -1:
+            self.servo_status = last_status
+            return False
+        elif self.servo_status == self.SERVO_CLOSED:
             print("Cage already attached!")
             return True
 
@@ -96,6 +103,7 @@ class MainMaster():
             return
 
     def run(self):
+        self.display_help()
         while True:
             serial = self.poll.poll()        
             _input = serial[0][0].read(1)
@@ -121,6 +129,7 @@ class MainMaster():
             elif _input == 'p':
                 print("'p' - start periodic execution")
                 self.periodic_function()
+                self.display_help()
 
             elif _input == 'h':
                 print("'h' - display help")

@@ -7,11 +7,18 @@ import unittest
 
 class TestMaster(unittest.TestCase):
     def setUp(self):
-        self.lin = LINMaster()
         self.main_master = MainMaster()
+        self.lin = self.main_master.lin
+
+    def test_communication(self):
+        self.lin = LINMaster()
+        result = self.lin.send_header(self.main_master.LIN_SERVO_STATUS)[0]
+        print("Status:", result)
+        self.assertFalse(result == -1)
 
     def test_wrong_parity(self):
-        slaveID = self.lin.LIN_SERVO_STATUS
+        self.lin = LINMaster()
+        slaveID = self.main_master.LIN_SERVO_STATUS
         parity = 0
         for x in range(6):
             parity = parity + ((slaveID >> x) & 0x01)
@@ -28,13 +35,13 @@ class TestMaster(unittest.TestCase):
         LINMaster._uart.write(bytes([id_byte])) # send slaveID + parity
 
         for a in range(2):
-                timer = LINMaster.TIMEOUT / 2
-                while not LINMaster._uart.any() and timer:
-                    timer -= 1
+            timer = LINMaster.TIMEOUT / 2
+            while not LINMaster._uart.any() and timer:
+                timer -= 1
 
-                if not timer:
-                    break
-                byte = LINMaster._uart.read(1)
+            if not timer:
+                break
+            byte = LINMaster._uart.read(1)
 
             received = b''
             timer = LINMaster.TIMEOUT
@@ -73,12 +80,9 @@ class TestMaster(unittest.TestCase):
             # Assert that the checksum is wrong
             self.assertTrue(LINMaster._checksum(received))
 
-    def test_communication(self):
-        result = self.lin.send_header(self.lin.LIN_SERVO_STATUS)[0]
-        self.assertFalse(result == -1)
-
     def test_server(self):
-        read_rfid = [0, 0, 0, 0]
+        self.main_master = MainMaster()
+        read_rfid = self.main_master.ask_rfid()
         count = 20
 
         while read_rfid != self.main_master.RIGHT_RFID_TAG and count:
@@ -94,4 +98,5 @@ class TestMaster(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    sleep(1.5)
     unittest.main()
